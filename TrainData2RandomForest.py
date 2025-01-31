@@ -1,5 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
-# from sklearn.preprocessing import TargetEncoder
+
 from joblib import dump
 import category_encoders as ce
 from sklearn.model_selection import train_test_split
@@ -12,12 +12,8 @@ from sklearn.metrics import (
     confusion_matrix, classification_report,
 )
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import time
-import os
-
-import pandas as pd
 import os
 
 
@@ -139,7 +135,7 @@ class TonIotDataset:
         if cols is None:
             cols = self.__columns
         self.cols_in_use = cols
-        df = pd.read_csv(self.path, sep=",", usecols=cols, dtype=self.__types, nrows=10000)
+        df = pd.read_csv(self.path, sep=",", usecols=cols, dtype=self.__types, nrows=100000)
         return df
 
     def save_dataset(self, dataframe, filename, dirpath=None):
@@ -224,7 +220,6 @@ print(f"<{time_str}> Done. Elapsed {end_time - start_time}s.")
 start_time = time.time()
 time_str = time.strftime("%R")
 print(f"<{time_str}> Training...")
-
 ######## test model with different weights ########
 
 # Calculate the scale_pos_weight
@@ -233,17 +228,13 @@ num_neg = np.sum(y_train == 0)
 scale_pos_weight = num_neg / num_pos
 # scaling factors
 scaling_factors = [0.25, 0.5, 1, 2, 4]
-samples_weight = np.array(scaling_factors)
+savepath = "Models/"
 
 for i in scaling_factors:
     print(f"Running model with scale_pos_weight multiplier: {i}")
 
     # Create the XGBClassifier with scale_pos_weight
-    model = RandomForestClassifier(
-        n_estimators=100,  # Numero di alberi
-        max_depth=10,  # Profondità degli alberi
-        n_jobs=-1  # Utilizza tutti i core disponibili
-    )
+    model = RandomForestClassifier()
 
     # Fit the model
     start_time = time.time()
@@ -260,7 +251,7 @@ for i in scaling_factors:
     time_str = time.strftime("%R")
     print(f"<{time_str}> Done. Elapsed {end_time - start_time}s.")
 
-    dump(model, f"randomForest_model_scale_weight_f{i * 100}.json")
+    dump(model, savepath + f"xgboost_model_scale_weight_f{i * 100}.json")
 
     # Make predictions and compute other scores
     start_prediction_time = time.time()
@@ -269,6 +260,7 @@ for i in scaling_factors:
     num_rows = X_test.shape[0]
     infer_time = (end_prediction_time - start_prediction_time) / num_rows
     y_pred_proba = model.predict_proba(X_test)[:, 1]
+    print(y_pred_proba.shape)
     accuracy = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
@@ -310,5 +302,4 @@ for i in scaling_factors:
     }
     # Save results to a .csv file
     results_df = pd.DataFrame(list(results.items()), columns=['Metric', 'Score'])
-    results_df.to_csv( f"xgboost_resultsscale_weight_f{i * 100}.csv", index=False)
-
+    results_df.to_csv(savepath + f"xgboost_resultsscale_weight_f{i * 100}.csv", index=False)
