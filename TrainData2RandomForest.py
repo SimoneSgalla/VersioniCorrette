@@ -228,6 +228,13 @@ num_neg = np.sum(y_train == 0)
 scale_pos_weight = num_neg / num_pos
 # scaling factors
 scaling_factors = [0.25, 0.5, 1, 2, 4]
+
+print(y_train)
+
+class_sample_count = np.array([len(np.where(y_train["label"] == t)[0]) for t in np.unique(y_train["label"])])
+weight = 1. / class_sample_count
+samples_weight = np.array([weight[t] for t in (y_train["label"].astype(int)).to_numpy()])
+
 savepath = "Models/"
 
 for i in scaling_factors:
@@ -241,7 +248,7 @@ for i in scaling_factors:
     time_str = time.strftime("%R")
     print(f"<{time_str}> Training...")
     start_training_time = time.time()
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, sample_weight=samples_weight)
     y_pred = model.predict(X_test.values)
     print(f'Accuracy: {accuracy_score(y_test, y_pred)}')
     print(classification_report(y_test, y_pred))
