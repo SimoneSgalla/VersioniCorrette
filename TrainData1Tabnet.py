@@ -292,7 +292,7 @@ data_config = DataConfig(
 
 trainer_config = TrainerConfig(
     #     auto_lr_find=True, # Runs the LRFinder to automatically derive a learning rate
-    batch_size=256,
+    batch_size=1048576*8,
     max_epochs=1,
     early_stopping="valid_loss",  # Monitor valid_loss for early stopping
     early_stopping_mode="min",  # Set the mode as min because for val_loss, lower is better
@@ -308,17 +308,18 @@ head_config = LinearHeadConfig(
     layers="",  # No additional layer in head, just a mapping layer to output_dim
     dropout=0.1,
     initialization="kaiming",
-).__dict__  # Convert to dict to pass to the model config (OmegaConf doesn't accept objects)
+).__dict__ # Convert to dict to pass to the model config (OmegaConf doesn't accept objects)
 
 model_config = TabNetModelConfig(
-    task="classification",
+     task="classification",
     learning_rate=1e-3,
     head="LinearHead",  # Linear Head
     head_config=head_config,  # Linear Head Config
-    metrics=['accuracy', 'f1_score', 'precision', 'recall', 'auroc'], #found in Lib/site-packages/torchmetrics/functional/__init__.py
+    metrics=['accuracy', 'f1_score', 'precision', 'recall', 'auroc'], #found in Lib/site-packages/torchmetrics/functional/init.py
     metrics_prob_input=[False, False, False, False, True],
     metrics_params=[{'task': 'binary', 'num_classes': num_classes}, {'task': 'binary', 'num_classes': num_classes}, {'task': 'binary', 'num_classes': num_classes}, {'task': 'binary', 'num_classes': num_classes}, {}],
 )
+
 
 tabular_model = TabularModel(
     data_config=data_config,
